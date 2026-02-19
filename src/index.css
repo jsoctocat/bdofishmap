@@ -27,6 +27,21 @@ html, body, #root {
   background: transparent !important;
 }
 
+/* ── Progressive resolution — tile rendering changes with zoom level ───────
+   Low zoom  → tiles are small/coarse; we scale them up with pixelated rendering
+              so they look deliberately blocky rather than blurry.
+   High zoom → smooth/auto rendering reveals full tile detail.
+   Blur fades from 1px → 0 across zoom levels to soften the coarse look at low zoom.
+   Transition is instant on zoomend so there's no lag between loading and sharpening. */
+
+[data-zoom="2"] .leaflet-tile-pane { image-rendering: pixelated; filter: blur(0.8px); }
+[data-zoom="3"] .leaflet-tile-pane { image-rendering: pixelated; filter: blur(0.4px); }
+[data-zoom="4"] .leaflet-tile-pane { image-rendering: pixelated; filter: blur(0.2px); }
+[data-zoom="5"] .leaflet-tile-pane { image-rendering: auto;      filter: none; }
+[data-zoom="6"] .leaflet-tile-pane { image-rendering: auto;      filter: none; }
+[data-zoom="7"] .leaflet-tile-pane { image-rendering: auto;      filter: none; }
+[data-zoom="8"] .leaflet-tile-pane { image-rendering: auto;      filter: none; }
+
 /* Floating control buttons (zoom in/out) */
 .leaflet-control-zoom a {
   background: #1f2937 !important;

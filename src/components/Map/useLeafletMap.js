@@ -186,13 +186,28 @@ export function useLeafletMap({ layers, lang, onZoneSelect }) {
       fadeAnimation:    false,  // prevents white flash when new tiles load in
     });
 
-    // Tile layer — identical config to original
+    // Tile layer
+    // updateWhenZooming:false means tiles only load once the zoom gesture settles,
+    // so the map stays at the previous zoom's (lower-res) tiles during the gesture.
     L.tileLayer('https://bdofish.github.io/map/{z}/{x}/{y}.jpg', {
-      minZoom:       2,
-      maxNativeZoom: 7,
-      maxZoom:       8,
-      noWrap:        true,
+      minZoom:           2,
+      maxNativeZoom:     7,
+      maxZoom:           8,
+      noWrap:            true,
+      updateWhenZooming: false,  // don't fetch new tiles mid-gesture
+      keepBuffer:        1,      // minimal tile buffer when zoomed out
     }).addTo(map);
+
+    // ── Zoom-level tracking for progressive-resolution CSS ─────────────────
+    // Sets data-zoom on the container so CSS applies different image-rendering
+    // rules per zoom level: soft/blurry at low zoom → crisp at high zoom.
+    function syncZoomClass() {
+      const z = Math.round(map.getZoom());
+      if (containerRef.current) containerRef.current.setAttribute('data-zoom', z);
+    }
+    map.on('zoom',    syncZoomClass);
+    map.on('zoomend', syncZoomClass);
+    syncZoomClass();
 
     // Pan limits matching original mapSW/mapNE
     map.setMaxBounds([[-300, -300], [300, 300]]);
