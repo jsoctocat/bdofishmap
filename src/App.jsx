@@ -9,15 +9,10 @@ import { useFishData }        from './hooks/useFishData.js';
 /**
  * Root component — owns all shared state.
  *
- * State tree:
- *   lang           — 'EN' | 'KR'
- *   layers         — { [key]: boolean }  layer visibility
- *   sidebarOpen    — boolean
- *   activeTab      — 'layers' | 'fish'
- *   selectedZone   — GeoJSON feature | null (hovered or clicked zone)
- *   zoneIsLocked   — boolean  (true when zone was clicked, not just hovered)
- *   searchTerm     — string  fish list search
- *   activeFilters  — string[]  fish type filters
+ * Architecture:
+ *   • Sidebar (rail + panel) lives at left=0, z=1001
+ *   • Map div is offset to the right of the sidebar, transitions smoothly
+ *   • Fish data is fetched once here and passed to both the map and the sidebar
  */
 export default function App() {
   // ── Language ─────────────────────────────────────────────────────────────
@@ -35,49 +30,36 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab,   setActiveTab]   = useState('layers');
 
-  // Clicking the active tab closes the panel; any other tab opens it
   const handleTabClick = useCallback(tab => {
     setSidebarOpen(prev => activeTab === tab ? !prev : true);
     setActiveTab(tab);
   }, [activeTab]);
 
-  // ── Fish list ─────────────────────────────────────────────────────────────
-  const [searchTerm,    setSearchTerm]    = useState('');
-  const [activeFilters, setActiveFilters] = useState([]);
+  // ── Fish list search (shared: clicking a fish in the panel pre-fills it) ──
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const toggleFilter = useCallback(
-    type => setActiveFilters(prev =>
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type],
-    ),
-    [],
-  );
-
-  // ── Selected zone (from map polygon interaction) ──────────────────────────
-  const [selectedZone, setSelectedZone] = useState(null);
-
-  // Called by the map when a zone is hovered (locked=false) or clicked (locked=true)
-  const handleZoneSelect = useCallback((feature, locked) => {
-    setSelectedZone(feature);
-    // If user clicks a fish in the display panel, locked is still true — don't close
-  }, []);
-
-  // Called when a fish sprite in FishDisplayPanel is clicked
   const handleFishClick = useCallback(fishName => {
     setSearchTerm(fishName);
     setActiveTab('fish');
     setSidebarOpen(true);
   }, []);
 
-  // ── Fish data ─────────────────────────────────────────────────────────────
-  const { fishData, spriteSort } = useFishData();
+  // ── Selected fishing zone ─────────────────────────────────────────────────
+  const [selectedZone, setSelectedZone] = useState(null);
 
-  // ── Map left offset follows sidebar state ─────────────────────────────────
+  const handleZoneSelect = useCallback((feature) => {
+    setSelectedZone(feature);
+  }, []);
+
+  // ── Fish data (fetched once on mount) ─────────────────────────────────────
+  const { fishData } = useFishData();
+
+  // ── Sidebar total pixel width (used to offset the map) ───────────────────
   const sidebarWidth = RAIL_WIDTH + (sidebarOpen ? PANEL_WIDTH : 0);
 
   return (
     <div className="relative w-full h-full bg-gray-950">
 
-      {/* Sidebar: always-visible rail + optional content panel */}
       <Sidebar
         isOpen={sidebarOpen}
         activeTab={activeTab}
@@ -89,11 +71,8 @@ export default function App() {
         fishData={fishData}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        activeFilters={activeFilters}
-        onFilterChange={toggleFilter}
       />
 
-      {/* Map — pushed right so it never hides under the sidebar */}
       <div
         className="absolute top-0 bottom-0 right-0 transition-[left] duration-300 ease-in-out"
         style={{ left: sidebarWidth }}
@@ -105,7 +84,6 @@ export default function App() {
           selectedZone={selectedZone}
           onZoneSelect={handleZoneSelect}
           fishData={fishData}
-          spriteSort={spriteSort}
           onFishClick={handleFishClick}
         />
       </div>

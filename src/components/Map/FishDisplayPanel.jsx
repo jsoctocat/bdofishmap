@@ -1,19 +1,22 @@
 /**
  * FishDisplayPanel
  *
- * Shows the catchable fish for the zone that was last hovered or clicked.
- * Mirrors the original fishdisplayInfo.update() behaviour:
- *   • Always shows the fishing rod icon first
- *   • Shows harpoon icon if 'harpoon' appears in fishGroup
- *   • Shows each fish as a sprite-sheet slice, bordered in grade colour
- *   • Clicking a fish sprite triggers onFishClick → jumps to Fish List
+ * Popup overlay shown when a fishing zone is hovered or clicked.
+ * Mirrors original fishdisplayInfo.update() exactly:
+ *   • Fishing rod icon always first
+ *   • Harpoon icon if 'harpoon' is in fishGroup
+ *   • Each fish shown as a 25×25 individual PNG bordered by grade colour
+ *   • Clicking a fish → jumps to Fish List with pre-filled search
+ *
+ * Individual fish PNGs (icons/fish/{file}.png) are used instead of the
+ * sprite sheet because the .spriteCSS background-image is in an external
+ * CSS file not bundled here.
  */
 
 const ICON_BASE = 'https://bdofish.github.io/icons/';
+const FISH_SIZE = 25; // px — same as original display panel sprite size
 
-export default function FishDisplayPanel({
-  zone, fishData, spriteSort, lang, onFishClick, onClose,
-}) {
+export default function FishDisplayPanel({ zone, fishData, lang, onFishClick, onClose }) {
   if (!zone) return null;
 
   const { name_EN, name_KR, fishGroup } = zone.properties;
@@ -21,41 +24,37 @@ export default function FishDisplayPanel({
 
   return (
     <div className="absolute top-4 right-4 z-[1000] pointer-events-auto">
-      <div className="relative bg-gray-900/92 backdrop-blur border border-amber-500/40
-                      rounded-xl shadow-2xl p-3 max-w-xs min-w-[180px]">
-
-        {/* Close button */}
+      <div
+        className="relative bg-gray-900/95 border border-amber-500/50 rounded-xl shadow-2xl p-3"
+        style={{ maxWidth: 280, minWidth: 160 }}
+      >
+        {/* Close */}
         <button
           onClick={onClose}
           className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center
                      bg-gray-700 hover:bg-red-600 rounded-full text-white text-[10px]
-                     transition-colors shadow-md"
+                     transition-colors shadow"
           aria-label="Close"
-        >
-          ✕
-        </button>
+        >✕</button>
 
         {/* Zone name */}
         <p
-          className="text-amber-400 font-bold text-sm mb-2 pb-1.5 border-b border-amber-500/30"
+          className="text-amber-400 font-bold text-sm mb-2 pb-1.5 border-b border-amber-500/30 leading-tight"
           dangerouslySetInnerHTML={{ __html: zoneName }}
         />
 
-        {/* Fish icons */}
-        <div className="flex flex-wrap gap-1.5 items-center">
-
-          {/* Fishing rod — always first */}
+        {/* Fish icons row */}
+        <div className="flex flex-wrap gap-1 items-center">
+          {/* Fishing rod always first */}
           <img
             src={`${ICON_BASE}fishingrod.png`}
             alt="Fishing Rod"
             title={lang === 'KR' ? '낚싯대' : 'Fishing Rod'}
-            className="w-5 h-5 flex-shrink-0"
+            style={{ width: FISH_SIZE, height: FISH_SIZE }}
             onError={e => { e.target.style.display = 'none'; }}
           />
 
           {fishGroup.map((fileKey, i) => {
-
-            /* Harpoon — special non-fish entry */
             if (fileKey === 'harpoon') {
               return (
                 <img
@@ -63,7 +62,7 @@ export default function FishDisplayPanel({
                   src={`${ICON_BASE}harpoon.png`}
                   alt="Harpoon"
                   title={lang === 'KR' ? '작살' : 'Harpoon'}
-                  className="w-5 h-5 flex-shrink-0"
+                  style={{ width: FISH_SIZE, height: FISH_SIZE }}
                   onError={e => { e.target.style.display = 'none'; }}
                 />
               );
@@ -75,26 +74,30 @@ export default function FishDisplayPanel({
             const fishName   = lang === 'KR' ? fish.name_KR : fish.name_EN;
             const gradeColor = fish.grade === '#E5E5E5' ? 'black' : fish.grade;
 
-            // Sprite-sheet Y offset: each fish occupies 25 px
-            const spriteIndex = spriteSort.indexOf(fileKey);
-            const spriteY     = spriteIndex !== -1 ? -25 * spriteIndex : 0;
-
             return (
               <button
                 key={i}
                 title={fishName}
                 onClick={() => onFishClick(fishName)}
-                className="inline-block hover:scale-110 transition-transform cursor-pointer
-                           focus:outline-none focus:ring-1 focus:ring-amber-400"
-                style={{ border: `1px solid ${gradeColor}`, borderRadius: 2 }}
+                style={{
+                  border: `1px solid ${gradeColor}`,
+                  borderRadius: 2,
+                  width: FISH_SIZE,
+                  height: FISH_SIZE,
+                  padding: 0,
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  overflow: 'hidden',
+                  display: 'flex',
+                }}
+                className="hover:scale-110 transition-transform"
               >
-                <span
-                  className="block w-[25px] h-[25px]"
-                  style={{
-                    backgroundImage:    `url(${ICON_BASE}fish_sprite.png)`,
-                    backgroundPosition: `0px ${spriteY}px`,
-                    backgroundRepeat:   'no-repeat',
-                  }}
+                <img
+                  src={`${ICON_BASE}fish/${fileKey}.png`}
+                  alt={fishName}
+                  style={{ width: FISH_SIZE, height: FISH_SIZE, objectFit: 'contain', display: 'block' }}
+                  onError={e => { e.target.style.opacity = '0'; }}
                 />
               </button>
             );

@@ -2,24 +2,13 @@ import LayerPanel from './LayerPanel.jsx';
 import FishList   from './FishList.jsx';
 
 /**
- * Sidebar — narrow icon rail (always visible) + sliding content panel.
- *
- * Rail width  = RAIL_WIDTH  (44 px)
- * Panel width = PANEL_WIDTH (260 px)  ← exported so App can offset the map
+ * Sidebar — always-visible icon rail (44 px) + sliding content panel (260 px).
  *
  * Props:
- *   isOpen         — content panel visible
- *   activeTab      — 'layers' | 'fish'
- *   onTabClick     — (tabId) => void
- *   lang           — 'EN' | 'KR'
- *   onLangToggle   — () => void
- *   layers         — { [key]: boolean }
- *   onLayerToggle  — (key) => void
- *   fishData       — fish array
- *   searchTerm     — string
- *   onSearchChange — (value) => void
- *   activeFilters  — string[]
- *   onFilterChange — (type) => void
+ *   isOpen, activeTab, onTabClick
+ *   lang, onLangToggle
+ *   layers, onLayerToggle
+ *   fishData, searchTerm, onSearchChange
  */
 
 export const RAIL_WIDTH  = 44;
@@ -35,13 +24,12 @@ export default function Sidebar({
   lang, onLangToggle,
   layers, onLayerToggle,
   fishData, searchTerm, onSearchChange,
-  activeFilters, onFilterChange,
 }) {
   const currentTab = TABS.find(t => t.id === activeTab);
 
   return (
     <>
-      {/* ── Icon rail ─────────────────────────────────────── */}
+      {/* ── Icon rail ──────────────────────────────────────────── */}
       <div
         className="absolute left-0 top-0 bottom-0 z-[1001] flex flex-col
                    bg-gray-900 border-r border-gray-700/80"
@@ -63,7 +51,6 @@ export default function Sidebar({
 
         <div className="flex-1" />
 
-        {/* Language toggle */}
         <button
           onClick={onLangToggle}
           title="Toggle language / 언어 전환"
@@ -74,14 +61,13 @@ export default function Sidebar({
         </button>
       </div>
 
-      {/* ── Content panel ──────────────────────────────────── */}
+      {/* ── Content panel ──────────────────────────────────────── */}
       <div
         className="absolute top-0 bottom-0 z-[1000] bg-gray-950/95 backdrop-blur-sm
                    border-r border-gray-700/80 flex flex-col overflow-hidden
                    transition-[width] duration-300 ease-in-out"
         style={{ left: RAIL_WIDTH, width: isOpen ? PANEL_WIDTH : 0 }}
       >
-        {/* Panel header */}
         <div className="flex-shrink-0 px-3 py-2 border-b border-gray-700/80
                         flex items-center justify-between">
           <span className="text-amber-400 text-sm font-semibold tracking-wide truncate">
@@ -89,14 +75,11 @@ export default function Sidebar({
           </span>
           <button
             onClick={() => onTabClick(activeTab)}
-            className="text-gray-500 hover:text-white text-xs ml-2 flex-shrink-0"
+            className="text-gray-500 hover:text-white text-xs ml-2"
             aria-label="Close panel"
-          >
-            ✕
-          </button>
+          >✕</button>
         </div>
 
-        {/* Tab content */}
         <div className="flex-1 min-h-0 overflow-hidden">
           {activeTab === 'layers' && (
             <LayerPanel layers={layers} onToggle={onLayerToggle} lang={lang} />
@@ -107,8 +90,6 @@ export default function Sidebar({
               lang={lang}
               searchTerm={searchTerm}
               onSearchChange={onSearchChange}
-              activeFilters={activeFilters}
-              onFilterChange={onFilterChange}
             />
           )}
         </div>

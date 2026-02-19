@@ -6,41 +6,29 @@ const FISH_JSON_URL =
 /**
  * Fetches the live fish catalogue from bdofish's GitHub repository.
  *
- * Returns:
- *   fishData   — array of fish objects { file, name_EN, name_KR, grade, type, method }
- *   spriteSort — alphabetically sorted file-key array used to compute
- *                sprite-sheet Y offsets (each fish = 25 px tall in the sheet)
- *   loading    — true while in-flight
- *   error      — Error or null
+ * Fish object shape:
+ *   file, name_EN, name_KR, type_EN, type_KR, method_EN, method_KR,
+ *   grade, price, class, tooltip_EN, tooltip_KR
+ *
+ * Returns: { fishData, loading, error }
  */
 export function useFishData() {
-  const [fishData,   setFishData]   = useState([]);
-  const [spriteSort, setSpriteSort] = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState(null);
+  const [fishData, setFishData] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-
     fetch(FISH_JSON_URL)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(data => {
-        if (cancelled) return;
-        const sorted = [...data.map(f => f.file)].sort((a, b) =>
-          a.toLowerCase().localeCompare(b.toLowerCase()),
-        );
-        setFishData(data);
-        setSpriteSort(sorted);
-        setLoading(false);
+        if (!cancelled) { setFishData(data); setLoading(false); }
       })
       .catch(err => {
-        if (cancelled) return;
-        setError(err);
-        setLoading(false);
+        if (!cancelled) { setError(err); setLoading(false); }
       });
-
     return () => { cancelled = true; };
   }, []);
 
-  return { fishData, spriteSort, loading, error };
+  return { fishData, loading, error };
 }
