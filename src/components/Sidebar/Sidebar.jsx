@@ -1,14 +1,11 @@
-import LayerPanel from './LayerPanel.jsx';
-import FishList   from './FishList.jsx';
+import LayerPanel  from './LayerPanel.jsx';
+import FishList    from './FishList.jsx';
+import NoticePanel from './NoticePanel.jsx';
 
 /**
- * Sidebar — always-visible icon rail (44 px) + sliding content panel (260 px).
+ * Sidebar — icon rail (44px) + sliding content panel (260px).
  *
- * Props:
- *   isOpen, activeTab, onTabClick
- *   lang, onLangToggle
- *   layers, onLayerToggle
- *   fishData, searchTerm, onSearchChange
+ * Tabs: Layers | Fish List | Notice
  */
 
 export const RAIL_WIDTH  = 44;
@@ -17,6 +14,7 @@ export const PANEL_WIDTH = 260;
 const TABS = [
   { id: 'layers', icon: '🗺️', labelEN: 'Layers',    labelKR: '레이어'      },
   { id: 'fish',   icon: '🐟', labelEN: 'Fish List',  labelKR: '물고기 목록' },
+  { id: 'notice', icon: '📋', labelEN: 'Notices',    labelKR: '공지사항'    },
 ];
 
 export default function Sidebar({
@@ -68,6 +66,7 @@ export default function Sidebar({
                    transition-[width] duration-300 ease-in-out"
         style={{ left: RAIL_WIDTH, width: isOpen ? PANEL_WIDTH : 0 }}
       >
+        {/* Panel header */}
         <div className="flex-shrink-0 px-3 py-2 border-b border-gray-700/80
                         flex items-center justify-between">
           <span className="text-amber-400 text-sm font-semibold tracking-wide truncate">
@@ -80,6 +79,7 @@ export default function Sidebar({
           >✕</button>
         </div>
 
+        {/* Panel content */}
         <div className="flex-1 min-h-0 overflow-hidden">
           {activeTab === 'layers' && (
             <LayerPanel layers={layers} onToggle={onLayerToggle} lang={lang} />
@@ -91,6 +91,9 @@ export default function Sidebar({
               searchTerm={searchTerm}
               onSearchChange={onSearchChange}
             />
+          )}
+          {activeTab === 'notice' && (
+            <NoticePanel lang={lang} />
           )}
         </div>
       </div>

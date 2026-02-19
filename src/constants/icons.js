@@ -1,7 +1,7 @@
 import L from 'leaflet';
 
 // All icons are served from the live bdofish GitHub Pages site.
-const BASE = 'https://bdofish.github.io/icons/';
+const BASE = 'https://bdofish.com/icons/';
 
 /**
  * Create a Leaflet DivIcon-free icon from a relative path under BASE.

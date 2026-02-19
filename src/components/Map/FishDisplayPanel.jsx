@@ -13,7 +13,7 @@
  * CSS file not bundled here.
  */
 
-const ICON_BASE = 'https://bdofish.github.io/icons/';
+const ICON_BASE = 'https://bdofish.com/icons/';
 const FISH_SIZE = 25; // px — same as original display panel sprite size
 
 export default function FishDisplayPanel({ zone, fishData, lang, onFishClick, onClose }) {

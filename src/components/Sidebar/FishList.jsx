@@ -3,34 +3,16 @@ import { useState, useMemo } from 'react';
 /**
  * FishList — "Fish List" sidebar tab.
  *
- * Mirrors the original bdofish fish list exactly:
- *
- * Fish data fields used:
- *   file        — used to build icon URL
- *   name_EN/KR  — display name
- *   type_EN/KR  — "Freshwater" / "Saltwater" / "Other"
- *   method_EN/KR— "Fishing" / "Seagull" / "Harpoon"
- *   price       — silver value string (may be empty "")
- *   grade       — hex colour string (#FD6B49, #EDC845, #56B3E0, #A2BF40, #E5E5E5)
- *   class       — space-separated filter tokens e.g. "fw fs or"
- *
- * Filter token → meaning:
- *   Type:   fw=Freshwater  sw=Saltwater  etc=Other
- *   Method: fs=Fishing     sg=Seagull    hp=Harpoon
- *   Grade:  or=Orange      yw=Yellow     bl=Blue    gr=Green  wh=White
- *
- * Sorting: click any column header to sort asc/desc (matches jQuery tablesorter behaviour).
- *
- * Props:
- *   fishData       — raw array from useFishData
- *   lang           — 'EN' | 'KR'
- *   searchTerm     — controlled string (pre-filled by zone fish-click)
- *   onSearchChange — (value: string) => void
+ * Fixes applied:
+ *   1. table-layout: fixed with proper column widths that fit the 260px panel
+ *   2. Abbreviated type/method text (Fresh/Salt/Other, Rod/Gull/Harp) prevents overflow
+ *   3. Icon URL changed to bdofish.com (individual fish PNGs)
+ *   4. 🐟 emoji fallback when a fish icon 404s
  */
 
-const ICON_BASE = 'https://bdofish.github.io/icons/';
+// Use bdofish.com as the authoritative icon host
+const ICON_BASE = 'https://bdofish.com/icons/';
 
-// ── Filter group definitions ──────────────────────────────────────────────────
 const TYPE_FILTERS = [
   { token: 'fw',  labelEN: 'Freshwater', labelKR: '민물'  },
   { token: 'sw',  labelEN: 'Saltwater',  labelKR: '바닷물' },
@@ -49,13 +31,33 @@ const GRADE_FILTERS = [
   { token: 'wh', color: '#a2a2a2', labelEN: 'White',  labelKR: '흰색'   },
 ];
 
-// ── Sort helpers ──────────────────────────────────────────────────────────────
+const TYPE_ABBR = { fw: 'Fresh', sw: 'Salt', etc: 'Other' };
+const METH_ABBR = { fs: 'Rod',   sg: 'Gull', hp: 'Harp'  };
+
+function typeShort(fish, lang) {
+  if (lang === 'KR') {
+    const map = { Freshwater: '민물', Saltwater: '바닷물', Other: '기타' };
+    return map[fish.type_EN] ?? fish.type_EN;
+  }
+  const t = (fish.class ?? '').split(' ').find(x => x === 'fw' || x === 'sw' || x === 'etc');
+  return TYPE_ABBR[t] ?? fish.type_EN;
+}
+
+function methodShort(fish, lang) {
+  if (lang === 'KR') {
+    const map = { Fishing: '낚시', Seagull: '갈매기', Harpoon: '작살' };
+    return map[fish.method_EN] ?? fish.method_EN;
+  }
+  const t = (fish.class ?? '').split(' ').find(x => x === 'fs' || x === 'sg' || x === 'hp');
+  return METH_ABBR[t] ?? fish.method_EN;
+}
+
 const COLUMNS = [
-  { key: 'type',   labelEN: 'Type',   labelKR: '종류'  },
-  { key: 'method', labelEN: 'Method', labelKR: '방식'  },
-  { key: 'icon',   labelEN: 'Icon',   labelKR: '아이콘', noSort: true },
-  { key: 'name',   labelEN: 'Name',   labelKR: '이름'  },
-  { key: 'price',  labelEN: 'Price',  labelKR: '가격'  },
+  { key: 'type',   labelEN: 'Type',   labelKR: '종류' },
+  { key: 'method', labelEN: 'Meth',   labelKR: '방식' },
+  { key: 'icon',   labelEN: '',       labelKR: '',     noSort: true },
+  { key: 'name',   labelEN: 'Name',   labelKR: '이름' },
+  { key: 'price',  labelEN: 'Price',  labelKR: '가격' },
 ];
 
 function getFishValue(fish, colKey, lang) {
@@ -68,8 +70,7 @@ function getFishValue(fish, colKey, lang) {
   }
 }
 
-// ── FilterPill: a small toggle button ────────────────────────────────────────
-function FilterPill({ label, active, onClick, borderColor }) {
+function FilterPill({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -79,59 +80,65 @@ function FilterPill({ label, active, onClick, borderColor }) {
           ? 'bg-amber-500 border-amber-500 text-black font-semibold'
           : 'border-gray-600 text-gray-400 hover:border-amber-400 hover:text-white'
       }`}
-      style={borderColor && active ? { background: borderColor, borderColor: borderColor } : undefined}
     >
-      {borderColor
-        ? <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2,
-                         background: borderColor, border: `1px solid ${borderColor}` }} />
-        : label}
+      {label}
     </button>
   );
 }
 
-// ── SortArrow indicator ───────────────────────────────────────────────────────
 function SortArrow({ col, sortCol, sortDir }) {
-  if (sortCol !== col) return <span className="text-gray-600 ml-1">↕</span>;
-  return <span className="text-amber-300 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>;
+  if (sortCol !== col) return <span className="text-gray-600 ml-0.5" style={{ fontSize: 9 }}>↕</span>;
+  return <span className="text-amber-300 ml-0.5" style={{ fontSize: 9 }}>{sortDir === 'asc' ? '↑' : '↓'}</span>;
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-export default function FishList({ fishData, lang, searchTerm, onSearchChange }) {
-  const [activeFilters, setActiveFilters] = useState([]);   // array of token strings
-  const [sortCol,  setSortCol]  = useState('name');
-  const [sortDir,  setSortDir]  = useState('asc');
+// Fish icon with broken-image fallback
+function FishIcon({ fish }) {
+  const [broken, setBroken] = useState(false);
+  const border = fish.grade === '#E5E5E5' ? '#555' : fish.grade;
+  return (
+    <div style={{
+      width: 26, height: 26,
+      border: `1.5px solid ${border}`,
+      borderRadius: 2,
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden', background: '#111827', flexShrink: 0,
+    }}>
+      {broken
+        ? <span style={{ fontSize: 14, lineHeight: 1 }}>🐟</span>
+        : <img
+            src={`${ICON_BASE}fish/${fish.file}.png`}
+            alt={fish.name_EN}
+            style={{ width: 24, height: 24, objectFit: 'contain', display: 'block' }}
+            onError={() => setBroken(true)}
+          />}
+    </div>
+  );
+}
 
-  // Toggle a filter token on/off
+export default function FishList({ fishData, lang, searchTerm, onSearchChange }) {
+  const [activeFilters, setActiveFilters] = useState([]);
+  const [sortCol, setSortCol] = useState('name');
+  const [sortDir, setSortDir] = useState('asc');
+
   function toggleFilter(token) {
     setActiveFilters(prev =>
       prev.includes(token) ? prev.filter(t => t !== token) : [...prev, token],
     );
   }
 
-  // Click column header → toggle sort
   function handleSort(colKey) {
-    if (sortCol === colKey) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortCol(colKey);
-      setSortDir('asc');
-    }
+    if (sortCol === colKey) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(colKey); setSortDir('asc'); }
   }
 
-  // ── Filter + search + sort (memoised for performance) ─────────────────────
   const displayed = useMemo(() => {
     let list = fishData;
-
-    // Active filter: fish.class must contain ALL active tokens
-    // (mirrors the original jQuery: shows rows whose className contains all checked values)
     if (activeFilters.length > 0) {
       list = list.filter(fish => {
         const cls = (fish.class ?? '').split(' ');
         return activeFilters.every(token => cls.includes(token));
       });
     }
-
-    // Text search across name (both languages)
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
       list = list.filter(fish =>
@@ -139,27 +146,20 @@ export default function FishList({ fishData, lang, searchTerm, onSearchChange })
         (fish.name_KR ?? '').toLowerCase().includes(q),
       );
     }
-
-    // Sort
     list = [...list].sort((a, b) => {
       const va = getFishValue(a, sortCol, lang);
       const vb = getFishValue(b, sortCol, lang);
-      let cmp = 0;
-      if (typeof va === 'number') cmp = va - vb;
-      else cmp = String(va ?? '').localeCompare(String(vb ?? ''));
+      const cmp = typeof va === 'number' ? va - vb : String(va ?? '').localeCompare(String(vb ?? ''));
       return sortDir === 'asc' ? cmp : -cmp;
     });
-
     return list;
   }, [fishData, activeFilters, searchTerm, sortCol, sortDir, lang]);
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full">
 
-      {/* ── Search + filter bar ─────────────────────────────────────────── */}
-      <div className="p-2 border-b border-gray-700 flex-shrink-0 space-y-2">
-
+      {/* ── Filter bar ─────────────────────────────────────────── */}
+      <div className="p-2 border-b border-gray-700 flex-shrink-0 space-y-1.5">
         <input
           type="text"
           placeholder={lang === 'KR' ? '물고기 검색...' : 'Search fish...'}
@@ -170,39 +170,28 @@ export default function FishList({ fishData, lang, searchTerm, onSearchChange })
                      focus:outline-none focus:border-amber-500 transition-colors"
         />
 
-        {/* Type filters */}
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[10px] text-gray-500 font-semibold uppercase mr-0.5">
+          <span className="text-[10px] text-gray-500 font-semibold uppercase w-8 flex-shrink-0">
             {lang === 'KR' ? '종류' : 'Type'}
           </span>
           {TYPE_FILTERS.map(f => (
-            <FilterPill
-              key={f.token}
-              label={lang === 'KR' ? f.labelKR : f.labelEN}
-              active={activeFilters.includes(f.token)}
-              onClick={() => toggleFilter(f.token)}
-            />
+            <FilterPill key={f.token} label={lang === 'KR' ? f.labelKR : f.labelEN}
+              active={activeFilters.includes(f.token)} onClick={() => toggleFilter(f.token)} />
           ))}
         </div>
 
-        {/* Method filters */}
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[10px] text-gray-500 font-semibold uppercase mr-0.5">
-            {lang === 'KR' ? '방식' : 'Method'}
+          <span className="text-[10px] text-gray-500 font-semibold uppercase w-8 flex-shrink-0">
+            {lang === 'KR' ? '방식' : 'Meth'}
           </span>
           {METHOD_FILTERS.map(f => (
-            <FilterPill
-              key={f.token}
-              label={lang === 'KR' ? f.labelKR : f.labelEN}
-              active={activeFilters.includes(f.token)}
-              onClick={() => toggleFilter(f.token)}
-            />
+            <FilterPill key={f.token} label={lang === 'KR' ? f.labelKR : f.labelEN}
+              active={activeFilters.includes(f.token)} onClick={() => toggleFilter(f.token)} />
           ))}
         </div>
 
-        {/* Grade filters (coloured squares) */}
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[10px] text-gray-500 font-semibold uppercase mr-0.5">
+          <span className="text-[10px] text-gray-500 font-semibold uppercase w-8 flex-shrink-0">
             {lang === 'KR' ? '등급' : 'Grade'}
           </span>
           {GRADE_FILTERS.map(f => (
@@ -211,12 +200,8 @@ export default function FishList({ fishData, lang, searchTerm, onSearchChange })
               title={lang === 'KR' ? f.labelKR : f.labelEN}
               onClick={() => toggleFilter(f.token)}
               style={{
-                width: 16, height: 16,
-                borderRadius: 3,
-                background: f.color,
-                border: activeFilters.includes(f.token)
-                  ? '2px solid white'
-                  : '2px solid transparent',
+                width: 16, height: 16, borderRadius: 3, background: f.color,
+                border: activeFilters.includes(f.token) ? '2px solid white' : '2px solid transparent',
                 cursor: 'pointer',
                 outline: activeFilters.includes(f.token) ? `2px solid ${f.color}` : 'none',
                 outlineOffset: 1,
@@ -225,32 +210,42 @@ export default function FishList({ fishData, lang, searchTerm, onSearchChange })
           ))}
         </div>
 
-        {/* Reset button + count */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-0.5">
           <button
             onClick={() => { setActiveFilters([]); onSearchChange(''); }}
             className="text-[10px] text-gray-500 hover:text-amber-400 transition-colors underline"
           >
             {lang === 'KR' ? '초기화' : 'Reset'}
           </button>
-          <span className="text-[10px] text-gray-500">
-            {displayed.length} / {fishData.length}
-          </span>
+          <span className="text-[10px] text-gray-500">{displayed.length} / {fishData.length}</span>
         </div>
       </div>
 
-      {/* ── Sortable fish table ──────────────────────────────────────────── */}
+      {/* ── Fish table ─────────────────────────────────────────── */}
+      {/* 
+        Column budget inside 260px panel:
+          type 38 + method 34 + icon 30 + name(auto) + price 54 + padding ≈ 260px
+      */}
       <div className="sidebar-scroll flex-1 overflow-y-auto min-h-0">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full border-collapse" style={{ tableLayout: 'fixed', fontSize: 10 }}>
+          <colgroup>
+            <col style={{ width: 38 }} />
+            <col style={{ width: 34 }} />
+            <col style={{ width: 30 }} />
+            <col />
+            <col style={{ width: 54 }} />
+          </colgroup>
+
           <thead className="sticky top-0 z-10">
             <tr className="bg-amber-600 text-black">
               {COLUMNS.map(col => (
                 <th
                   key={col.key}
-                  className={`px-1 py-1 text-left font-semibold whitespace-nowrap select-none
-                    ${col.noSort ? '' : 'cursor-pointer hover:bg-amber-500'}`}
-                  style={{ width: col.key === 'name' ? 'auto' : col.key === 'icon' ? 36 : col.key === 'price' ? 52 : 52 }}
+                  className={`px-0.5 py-1 text-left font-semibold select-none
+                              overflow-hidden whitespace-nowrap
+                              ${col.noSort ? '' : 'cursor-pointer hover:bg-amber-500'}`}
                   onClick={col.noSort ? undefined : () => handleSort(col.key)}
+                  title={lang === 'KR' ? col.labelKR : col.labelEN}
                 >
                   {lang === 'KR' ? col.labelKR : col.labelEN}
                   {!col.noSort && <SortArrow col={col.key} sortCol={sortCol} sortDir={sortDir} />}
@@ -261,60 +256,42 @@ export default function FishList({ fishData, lang, searchTerm, onSearchChange })
 
           <tbody>
             {displayed.map((fish, i) => {
-              const name       = lang === 'KR' ? fish.name_KR   : fish.name_EN;
-              const type       = lang === 'KR' ? fish.type_KR   : fish.type_EN;
-              const method     = lang === 'KR' ? fish.method_KR : fish.method_EN;
-              // '#E5E5E5' is white — show in a visible grey instead
-              const nameColor  = fish.grade === '#E5E5E5' ? '#b0b0b0' : fish.grade;
+              const name      = lang === 'KR' ? fish.name_KR : fish.name_EN;
+              const nameColor = fish.grade === '#E5E5E5' ? '#b0b0b0' : fish.grade;
 
               return (
-                <tr
-                  key={i}
-                  className="border-b border-gray-800/60 hover:bg-gray-800/50 transition-colors"
-                >
+                <tr key={i} className="border-b border-gray-800/60 hover:bg-gray-800/50 transition-colors">
                   {/* Type */}
-                  <td className="px-1 py-1 text-gray-400 whitespace-nowrap">{type}</td>
+                  <td className="px-0.5 py-1 text-gray-400 overflow-hidden whitespace-nowrap"
+                      style={{ textOverflow: 'ellipsis' }}
+                      title={lang === 'KR' ? fish.type_KR : fish.type_EN}>
+                    {typeShort(fish, lang)}
+                  </td>
 
                   {/* Method */}
-                  <td className="px-1 py-1 text-gray-400 whitespace-nowrap">{method}</td>
+                  <td className="px-0.5 py-1 text-gray-400 overflow-hidden whitespace-nowrap"
+                      style={{ textOverflow: 'ellipsis' }}
+                      title={lang === 'KR' ? fish.method_KR : fish.method_EN}>
+                    {methodShort(fish, lang)}
+                  </td>
 
-                  {/* Icon (individual PNG) */}
-                  <td className="px-1 py-1 text-center">
-                    <div
-                      className="inline-flex items-center justify-center mx-auto"
-                      style={{
-                        width: 32, height: 32,
-                        border: `1px solid ${fish.grade === '#E5E5E5' ? 'black' : fish.grade}`,
-                        borderRadius: 2,
-                      }}
-                    >
-                      <img
-                        src={`${ICON_BASE}fish/${fish.file}.png`}
-                        alt={name}
-                        style={{ width: 28, height: 28, objectFit: 'contain' }}
-                        onError={e => { e.target.style.display = 'none'; }}
-                      />
+                  {/* Icon */}
+                  <td className="px-0.5 py-1">
+                    <FishIcon fish={fish} />
+                  </td>
+
+                  {/* Name */}
+                  <td className="px-1 py-1 overflow-hidden"
+                      style={{ color: nameColor }}>
+                    <div className="font-medium overflow-hidden whitespace-nowrap"
+                         style={{ fontSize: 11, textOverflow: 'ellipsis' }}
+                         title={name}>
+                      {name}
                     </div>
                   </td>
 
-                  {/* Name (+ optional price) */}
-                  <td className="px-1 py-1" style={{ color: nameColor }}>
-                    <div className="font-medium">{name}</div>
-                    {fish.price !== '' && fish.price != null && (
-                      <div className="flex items-center gap-0.5 text-gray-300 text-[10px] mt-0.5">
-                        {Number(fish.price).toLocaleString()}
-                        <img
-                          src={`${ICON_BASE}Silver.png`}
-                          alt="silver"
-                          style={{ width: 12, height: 12 }}
-                          onError={e => { e.target.style.display = 'none'; }}
-                        />
-                      </div>
-                    )}
-                  </td>
-
-                  {/* Price (sortable column — shows in name cell, this col is hidden on small) */}
-                  <td className="px-1 py-1 text-gray-400 text-right whitespace-nowrap">
+                  {/* Price */}
+                  <td className="px-0.5 py-1 text-gray-400 text-right whitespace-nowrap overflow-hidden">
                     {fish.price !== '' && fish.price != null
                       ? Number(fish.price).toLocaleString()
                       : '—'}
