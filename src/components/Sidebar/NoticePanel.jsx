@@ -1,55 +1,20 @@
 /**
  * NoticePanel — "Notice" sidebar tab.
  *
- * Mirrors bdofish.com's notice section: a scrollable list of
- * timestamped game/site announcements relevant to BDO fishing.
+ * Reads notices at runtime from /notices.txt (plain text, served from public/).
+ *
+ * File format (notices.txt):
+ *   - Blocks are separated by a line containing only "==="
+ *   - Each block contains key=value lines
+ *   - Lines starting with # are comments and are ignored
+ *   - Supported keys: date, tag, title_en, title_kr, body_en, body_kr
+ *   - tag values: update | data | map  (anything else falls back to "update" style)
  *
  * Props:
  *   lang — 'EN' | 'KR'
  */
 
-const NOTICES = [
-  {
-    date: '2024.03.15',
-    titleEN: 'New Fishing Zone: Odraxxia Coastline',
-    titleKR: '신규 낚시 구역: 오드락시아 해안선',
-    bodyEN:  'The Odraxxia coastline has been added as a new saltwater fishing zone. Harpoon fishing is available in deeper waters.',
-    bodyKR:  '오드락시아 해안선이 새로운 바닷물 낚시 구역으로 추가되었습니다. 깊은 바다에서는 작살 낚시가 가능합니다.',
-    tag: 'update',
-  },
-  {
-    date: '2024.02.01',
-    titleEN: 'Imperial Fishing Delivery Expansion',
-    titleKR: '황실 낚시 납품 확장',
-    bodyEN:  'Two new Imperial Fishing Delivery NPCs have been added in O\'draxxia and Grana. Daily reset is at midnight (server time).',
-    bodyKR:  '오드락시아와 그라나에 황실 낚시 납품 NPC 2명이 추가되었습니다. 일일 초기화는 자정(서버 시간)입니다.',
-    tag: 'update',
-  },
-  {
-    date: '2023.11.22',
-    titleEN: 'Seagull Spot Data Updated',
-    titleKR: '갈매기 낚시터 데이터 업데이트',
-    bodyEN:  'Smokey Chromis and Eyespot Puffer seagull spots have been revised to reflect the latest in-game coordinates.',
-    bodyKR:  '스모키크로미스와 눈무늬복어의 갈매기 낚시터 좌표가 최신 인게임 데이터로 수정되었습니다.',
-    tag: 'data',
-  },
-  {
-    date: '2023.09.10',
-    titleEN: 'Fish Prices Refreshed',
-    titleKR: '물고기 가격 갱신',
-    bodyEN:  'Silver prices updated for all Saltwater and Harpoon fish to match the current BDO marketplace averages.',
-    bodyKR:  '모든 바닷물 및 작살 물고기의 실버 가격이 현재 BDO 거래소 평균에 맞게 업데이트되었습니다.',
-    tag: 'data',
-  },
-  {
-    date: '2023.06.05',
-    titleEN: 'Map Updated for Crimson Desert Areas',
-    titleKR: '붉은 사막 지역 지도 업데이트',
-    bodyEN:  'Zone boundaries in the Drieghan and Kamasylvia regions have been redrawn for accuracy.',
-    bodyKR:  '드리간 및 카마실비아 지역의 구역 경계가 정확도를 위해 재수정되었습니다.',
-    tag: 'map',
-  },
-];
+import { useState, useEffect } from 'react';
 
 const TAG_STYLE = {
   update: { bg: '#78350f', text: '#fcd34d', label: 'UPDATE' },
@@ -57,19 +22,97 @@ const TAG_STYLE = {
   map:    { bg: '#14532d', text: '#86efac', label: 'MAP'     },
 };
 
+// ── Parser ──────────────────────────────────────────────────────────────────
+function parseNotices(text) {
+  return text
+    .split(/^===\s*$/m)           // split on separator lines
+    .map(block => {
+      const notice = {};
+      block
+        .split('\n')
+        .filter(line => line.trim() && !line.trimStart().startsWith('#'))
+        .forEach(line => {
+          const eq = line.indexOf('=');
+          if (eq === -1) return;
+          const key = line.slice(0, eq).trim().toLowerCase();
+          const val = line.slice(eq + 1).trim();
+          notice[key] = val;
+        });
+      return notice;
+    })
+    .filter(n => n.title_en || n.title_kr); // skip empty/comment-only blocks
+}
+
+// ── Component ───────────────────────────────────────────────────────────────
 export default function NoticePanel({ lang }) {
+  const [notices, setNotices] = useState([]);
+  const [status,  setStatus]  = useState('loading'); // 'loading' | 'ok' | 'error'
+
+  useEffect(() => {
+    setStatus('loading');
+    fetch('/notices.txt')
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      })
+      .then(text => {
+        setNotices(parseNotices(text));
+        setStatus('ok');
+      })
+      .catch(() => setStatus('error'));
+  }, []);
+
+  // ── Loading state ──────────────────────────────────────────────────────────
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500 text-xs">
+        <span className="animate-pulse">
+          {lang === 'KR' ? '불러오는 중...' : 'Loading notices...'}
+        </span>
+      </div>
+    );
+  }
+
+  // ── Error state ────────────────────────────────────────────────────────────
+  if (status === 'error') {
+    return (
+      <div className="p-3 text-center text-gray-500 text-xs space-y-1">
+        <p className="text-red-400">⚠</p>
+        <p>{lang === 'KR' ? 'notices.txt를 불러올 수 없습니다.' : 'Could not load notices.txt'}</p>
+        <p className="text-gray-600">
+          {lang === 'KR'
+            ? 'public/notices.txt 파일을 확인하세요.'
+            : 'Check that public/notices.txt exists.'}
+        </p>
+      </div>
+    );
+  }
+
+  // ── Empty state ────────────────────────────────────────────────────────────
+  if (notices.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500 text-xs">
+        {lang === 'KR' ? '공지사항 없음' : 'No notices found'}
+      </div>
+    );
+  }
+
+  // ── Notices list ───────────────────────────────────────────────────────────
   return (
     <div className="sidebar-scroll overflow-y-auto h-full">
       <div className="p-2 space-y-2">
-        {NOTICES.map((n, i) => {
-          const tag = TAG_STYLE[n.tag] ?? TAG_STYLE.update;
+        {notices.map((n, i) => {
+          const tag   = TAG_STYLE[n.tag] ?? TAG_STYLE.update;
+          const title = lang === 'KR' ? (n.title_kr ?? n.title_en) : (n.title_en ?? n.title_kr);
+          const body  = lang === 'KR' ? (n.body_kr  ?? n.body_en)  : (n.body_en  ?? n.body_kr);
+
           return (
             <article
               key={i}
               className="rounded-lg border border-gray-700/60 bg-gray-900/80 p-2.5
                          hover:border-amber-500/40 transition-colors"
             >
-              {/* Header row */}
+              {/* Header: tag badge + date */}
               <div className="flex items-center gap-1.5 mb-1.5">
                 <span
                   className="text-[9px] font-bold px-1.5 py-0.5 rounded"
@@ -77,24 +120,30 @@ export default function NoticePanel({ lang }) {
                 >
                   {tag.label}
                 </span>
-                <span className="text-[10px] text-gray-500 ml-auto">{n.date}</span>
+                {n.date && (
+                  <span className="text-[10px] text-gray-500 ml-auto">{n.date}</span>
+                )}
               </div>
 
               {/* Title */}
-              <p className="text-amber-300 font-semibold leading-tight mb-1"
-                 style={{ fontSize: 11 }}>
-                {lang === 'KR' ? n.titleKR : n.titleEN}
-              </p>
+              {title && (
+                <p className="text-amber-300 font-semibold leading-tight mb-1"
+                   style={{ fontSize: 11 }}>
+                  {title}
+                </p>
+              )}
 
               {/* Body */}
-              <p className="text-gray-400 leading-relaxed" style={{ fontSize: 10 }}>
-                {lang === 'KR' ? n.bodyKR : n.bodyEN}
-              </p>
+              {body && (
+                <p className="text-gray-400 leading-relaxed" style={{ fontSize: 10 }}>
+                  {body}
+                </p>
+              )}
             </article>
           );
         })}
 
-        {/* Footer note */}
+        {/* Footer */}
         <p className="text-center text-gray-600 py-2" style={{ fontSize: 10 }}>
           {lang === 'KR'
             ? '최신 정보는 공식 BDO 패치노트를 확인하세요.'

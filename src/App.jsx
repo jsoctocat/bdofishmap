@@ -17,7 +17,7 @@ import { useFishData }        from './hooks/useFishData.js';
 export default function App() {
   // ── Language ─────────────────────────────────────────────────────────────
   const [lang, setLang] = useState('EN');
-  const toggleLang = useCallback(() => setLang(l => l === 'EN' ? 'KR' : 'EN'), []);
+  const handleLangChange = useCallback((l) => setLang(l), []);
 
   // ── Layer visibility ──────────────────────────────────────────────────────
   const [layers, setLayers] = useState(buildDefaultLayers);
@@ -65,7 +65,7 @@ export default function App() {
         activeTab={activeTab}
         onTabClick={handleTabClick}
         lang={lang}
-        onLangToggle={toggleLang}
+        onLangChange={handleLangChange}
         layers={layers}
         onLayerToggle={toggleLayer}
         fishData={fishData}

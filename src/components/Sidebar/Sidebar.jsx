@@ -1,29 +1,54 @@
 import LayerPanel  from './LayerPanel.jsx';
 import FishList    from './FishList.jsx';
 import NoticePanel from './NoticePanel.jsx';
+import LangPanel   from './LangPanel.jsx';
 
 /**
  * Sidebar — icon rail (44px) + sliding content panel (260px).
  *
- * Tabs: Layers | Fish List | Notice
+ * Tabs: Layers | Fish List | Notices | Language
+ * Language tab lives at the bottom of the rail (above the flex spacer),
+ * replacing the old toggle button.
  */
 
 export const RAIL_WIDTH  = 44;
 export const PANEL_WIDTH = 260;
 
-const TABS = [
+const TOP_TABS = [
   { id: 'layers', icon: '🗺️', labelEN: 'Layers',    labelKR: '레이어'      },
   { id: 'fish',   icon: '🐟', labelEN: 'Fish List',  labelKR: '물고기 목록' },
   { id: 'notice', icon: '📋', labelEN: 'Notices',    labelKR: '공지사항'    },
 ];
 
+const BOTTOM_TABS = [
+  { id: 'lang', icon: '🌐', labelEN: 'Language', labelKR: '언어' },
+];
+
+const ALL_TABS = [...TOP_TABS, ...BOTTOM_TABS];
+
 export default function Sidebar({
   isOpen, activeTab, onTabClick,
-  lang, onLangToggle,
+  lang, onLangChange,
   layers, onLayerToggle,
   fishData, searchTerm, onSearchChange,
 }) {
-  const currentTab = TABS.find(t => t.id === activeTab);
+  const currentTab = ALL_TABS.find(t => t.id === activeTab);
+
+  function RailButton({ tab }) {
+    const active = activeTab === tab.id && isOpen;
+    return (
+      <button
+        onClick={() => onTabClick(tab.id)}
+        title={lang === 'KR' ? tab.labelKR : tab.labelEN}
+        className={`w-full flex items-center justify-center py-3 text-lg transition-colors
+          ${active
+            ? 'bg-amber-600 text-white'
+            : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+      >
+        {tab.icon}
+      </button>
+    );
+  }
 
   return (
     <>
@@ -33,30 +58,16 @@ export default function Sidebar({
                    bg-gray-900 border-r border-gray-700/80"
         style={{ width: RAIL_WIDTH }}
       >
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => onTabClick(tab.id)}
-            title={lang === 'KR' ? tab.labelKR : tab.labelEN}
-            className={`w-full flex items-center justify-center py-3 text-lg transition-colors
-              ${activeTab === tab.id && isOpen
-                ? 'bg-amber-600 text-white'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
-          >
-            {tab.icon}
-          </button>
-        ))}
+        {/* Top tabs */}
+        {TOP_TABS.map(tab => <RailButton key={tab.id} tab={tab} />)}
 
         <div className="flex-1" />
 
-        <button
-          onClick={onLangToggle}
-          title="Toggle language / 언어 전환"
-          className="w-full py-2.5 text-[11px] font-bold text-gray-400
-                     hover:text-amber-400 border-t border-gray-700 transition-colors"
-        >
-          {lang === 'KR' ? 'EN' : '한'}
-        </button>
+        {/* Divider */}
+        <div className="border-t border-gray-700/80 mx-2" />
+
+        {/* Bottom tabs (language) */}
+        {BOTTOM_TABS.map(tab => <RailButton key={tab.id} tab={tab} />)}
       </div>
 
       {/* ── Content panel ──────────────────────────────────────── */}
@@ -94,6 +105,9 @@ export default function Sidebar({
           )}
           {activeTab === 'notice' && (
             <NoticePanel lang={lang} />
+          )}
+          {activeTab === 'lang' && (
+            <LangPanel lang={lang} onLangChange={onLangChange} />
           )}
         </div>
       </div>

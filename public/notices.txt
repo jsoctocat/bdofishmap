@@ -1,0 +1,47 @@
+# BDO Fishing Map — Notices
+# Format: key=value pairs, blocks separated by ===
+# Keys: date, tag (update|data|map), title_en, title_kr, body_en, body_kr
+# Lines starting with # are comments and are ignored.
+
+date=2024.03.15
+tag=update
+title_en=New Fishing Zone: Odraxxia Coastline
+title_kr=신규 낚시 구역: 오드락시아 해안선
+body_en=The Odraxxia coastline has been added as a new saltwater fishing zone. Harpoon fishing is available in deeper waters.
+body_kr=오드락시아 해안선이 새로운 바닷물 낚시 구역으로 추가되었습니다. 깊은 바다에서는 작살 낚시가 가능합니다.
+
+===
+
+date=2024.02.01
+tag=update
+title_en=Imperial Fishing Delivery Expansion
+title_kr=황실 낚시 납품 확장
+body_en=Two new Imperial Fishing Delivery NPCs have been added in O'draxxia and Grana. Daily reset is at midnight (server time).
+body_kr=오드락시아와 그라나에 황실 낚시 납품 NPC 2명이 추가되었습니다. 일일 초기화는 자정(서버 시간)입니다.
+
+===
+
+date=2023.11.22
+tag=data
+title_en=Seagull Spot Data Updated
+title_kr=갈매기 낚시터 데이터 업데이트
+body_en=Smokey Chromis and Eyespot Puffer seagull spots have been revised to reflect the latest in-game coordinates.
+body_kr=스모키크로미스와 눈무늬복어의 갈매기 낚시터 좌표가 최신 인게임 데이터로 수정되었습니다.
+
+===
+
+date=2023.09.10
+tag=data
+title_en=Fish Prices Refreshed
+title_kr=물고기 가격 갱신
+body_en=Silver prices updated for all Saltwater and Harpoon fish to match the current BDO marketplace averages.
+body_kr=모든 바닷물 및 작살 물고기의 실버 가격이 현재 BDO 거래소 평균에 맞게 업데이트되었습니다.
+
+===
+
+date=2023.06.05
+tag=map
+title_en=Map Updated for Drieghan and Kamasylvia
+title_kr=드리간 및 카마실비아 지도 업데이트
+body_en=Zone boundaries in the Drieghan and Kamasylvia regions have been redrawn for accuracy.
+body_kr=드리간 및 카마실비아 지역의 구역 경계가 정확도를 위해 재수정되었습니다.
