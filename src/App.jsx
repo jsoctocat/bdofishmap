@@ -1,76 +1,83 @@
 import { useState, useCallback } from 'react';
 
-import Sidebar  from './components/Sidebar/Sidebar.jsx';
-import BDOMap   from './components/Map/BDOMap.jsx';
+import Sidebar, { RAIL_WIDTH, PANEL_WIDTH } from './components/Sidebar/Sidebar.jsx';
+import BDOMap                               from './components/Map/BDOMap.jsx';
 
 import { buildDefaultLayers } from './constants/layers.js';
 import { useFishData }        from './hooks/useFishData.js';
 
-const SIDEBAR_PANEL_WIDTH = 260; // px – must match Sidebar.jsx
-const SIDEBAR_RAIL_WIDTH  = 44;  // px – must match Sidebar.jsx
-
 /**
- * Root application component.
+ * Root component — owns all shared state.
  *
- * Owns all shared state and passes it down to Sidebar and BDOMap:
- *   • language (EN / KR)
- *   • layer visibility  { [key]: boolean }
- *   • sidebar open/close + active tab
- *   • selected fishing zone
- *   • fish list search term + type filters
+ * State tree:
+ *   lang           — 'EN' | 'KR'
+ *   layers         — { [key]: boolean }  layer visibility
+ *   sidebarOpen    — boolean
+ *   activeTab      — 'layers' | 'fish'
+ *   selectedZone   — GeoJSON feature | null (hovered or clicked zone)
+ *   zoneIsLocked   — boolean  (true when zone was clicked, not just hovered)
+ *   searchTerm     — string  fish list search
+ *   activeFilters  — string[]  fish type filters
  */
 export default function App() {
-  // ── Language ─────────────────────────────────────────────
+  // ── Language ─────────────────────────────────────────────────────────────
   const [lang, setLang] = useState('EN');
   const toggleLang = useCallback(() => setLang(l => l === 'EN' ? 'KR' : 'EN'), []);
 
-  // ── Layer visibility ─────────────────────────────────────
+  // ── Layer visibility ──────────────────────────────────────────────────────
   const [layers, setLayers] = useState(buildDefaultLayers);
   const toggleLayer = useCallback(
-    (key) => setLayers(prev => ({ ...prev, [key]: !prev[key] })),
+    key => setLayers(prev => ({ ...prev, [key]: !prev[key] })),
     [],
   );
 
-  // ── Sidebar ──────────────────────────────────────────────
+  // ── Sidebar ───────────────────────────────────────────────────────────────
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab,   setActiveTab]   = useState('layers');
 
-  // Clicking the active tab toggles the panel; clicking another tab opens it
-  const handleTabClick = useCallback((tab) => {
-    setSidebarOpen(prev => (activeTab === tab ? !prev : true));
+  // Clicking the active tab closes the panel; any other tab opens it
+  const handleTabClick = useCallback(tab => {
+    setSidebarOpen(prev => activeTab === tab ? !prev : true);
     setActiveTab(tab);
   }, [activeTab]);
 
-  // ── Fish list state ───────────────────────────────────────
+  // ── Fish list ─────────────────────────────────────────────────────────────
   const [searchTerm,    setSearchTerm]    = useState('');
   const [activeFilters, setActiveFilters] = useState([]);
 
   const toggleFilter = useCallback(
-    (type) => setActiveFilters(prev =>
+    type => setActiveFilters(prev =>
       prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type],
     ),
     [],
   );
 
-  // ── Selected fishing zone ─────────────────────────────────
+  // ── Selected zone (from map polygon interaction) ──────────────────────────
   const [selectedZone, setSelectedZone] = useState(null);
 
-  // Clicking a fish icon inside FishDisplayPanel → jump to Fish List
-  const handleFishClick = useCallback((fishName) => {
+  // Called by the map when a zone is hovered (locked=false) or clicked (locked=true)
+  const handleZoneSelect = useCallback((feature, locked) => {
+    setSelectedZone(feature);
+    // If user clicks a fish in the display panel, locked is still true — don't close
+  }, []);
+
+  // Called when a fish sprite in FishDisplayPanel is clicked
+  const handleFishClick = useCallback(fishName => {
     setSearchTerm(fishName);
     setActiveTab('fish');
     setSidebarOpen(true);
   }, []);
 
-  // ── Fish data (fetched once) ──────────────────────────────
+  // ── Fish data ─────────────────────────────────────────────────────────────
   const { fishData, spriteSort } = useFishData();
 
-  // ── Sidebar offset applied to the map container ───────────
-  const mapLeft = SIDEBAR_RAIL_WIDTH + (sidebarOpen ? SIDEBAR_PANEL_WIDTH : 0);
+  // ── Map left offset follows sidebar state ─────────────────────────────────
+  const sidebarWidth = RAIL_WIDTH + (sidebarOpen ? PANEL_WIDTH : 0);
 
   return (
-    <div className="relative w-full h-screen bg-gray-950 overflow-hidden">
-      {/* Sidebar: rail + collapsible content panel */}
+    <div className="relative w-full h-full bg-gray-950">
+
+      {/* Sidebar: always-visible rail + optional content panel */}
       <Sidebar
         isOpen={sidebarOpen}
         activeTab={activeTab}
@@ -86,17 +93,17 @@ export default function App() {
         onFilterChange={toggleFilter}
       />
 
-      {/* Map: offset to the right of the sidebar */}
+      {/* Map — pushed right so it never hides under the sidebar */}
       <div
-        className="absolute inset-0 transition-[left] duration-300 ease-in-out"
-        style={{ left: mapLeft }}
+        className="absolute top-0 bottom-0 right-0 transition-[left] duration-300 ease-in-out"
+        style={{ left: sidebarWidth }}
       >
         <BDOMap
           layers={layers}
           lang={lang}
+          sidebarWidth={sidebarWidth}
           selectedZone={selectedZone}
-          onZoneClick={setSelectedZone}
-          onZoneClose={() => setSelectedZone(null)}
+          onZoneSelect={handleZoneSelect}
           fishData={fishData}
           spriteSort={spriteSort}
           onFishClick={handleFishClick}

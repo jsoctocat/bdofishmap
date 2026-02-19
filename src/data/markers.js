@@ -1,13 +1,6 @@
-// ─────────────────────────────────────────────────────────────
-// Hardcoded coordinate data from the original bdofish.github.io
-//
-// Format for most named markers: [lat, lng, "Name EN", "Name KR"]
-// Format for simple markers:     [lat, lng]
-// Format for sea monsters:       [lat, lng, "Name EN", "Name KR", "IconKey", layerRef]
-// ─────────────────────────────────────────────────────────────
-
-// ── World nodes ───────────────────────────────────────────────
-
+// Named markers: [lat, lng, "Name EN", "Name KR"]
+// Simple markers: [lat, lng]
+// Sea monsters:   [lat, lng, "Name EN", "Name KR", "IconKey", {}]
 export const CITIES = [
   [
     -37.1,
@@ -58,7 +51,6 @@ export const CITIES = [
     "오드락시아"
   ]
 ];
-
 export const TOWNS = [
   [
     -34.1,
@@ -193,8 +185,6 @@ export const TOWNS = [
     "랏 항구 마을"
   ]
 ];
-
-// Node types correspond to their in-game node tier (1 = smallest, 4 = largest)
 export const NODES_T1 = [
   [
     -36.2,
@@ -2471,9 +2461,7 @@ export const NODES_T4 = [
     "루드 유황 작업장"
   ]
 ];
-
-// Y-Shape = node connector island, Circle = standalone island node
-export const ISLANDS_Y      = [
+export const ISLANDS_Y = [
   [
     -38,
     -31.1,
@@ -2927,10 +2915,7 @@ export const ISLANDS_CIRCLE = [
     "파푸아 크리니"
   ]
 ];
-
-// ── NPCs ──────────────────────────────────────────────────────
-
-export const HARBORS           = [
+export const HARBORS = [
   [
     -36.05,
     12.7
@@ -3062,7 +3047,7 @@ export const IMPERIAL_DELIVERY = [
     -0.33
   ]
 ];
-export const TRADE_MANAGERS    = [
+export const TRADE_MANAGERS = [
   [
     61.34,
     -92.23
@@ -3504,7 +3489,7 @@ export const TRADE_MANAGERS    = [
     102.04
   ]
 ];
-export const BARTERERS         = [
+export const BARTERERS = [
   [
     -37.2,
     -31.3
@@ -3782,9 +3767,7 @@ export const BARTERERS         = [
     114.1
   ]
 ];
-
-// Ocean barterers: [lat, lng, "Name EN", "Name KR"]
-export const BARTERERS_OCEAN   = [
+export const BARTERERS_OCEAN = [
   [
     11.1,
     33.1,
@@ -3876,10 +3859,7 @@ export const BARTERERS_OCEAN   = [
     "파키오<br>(파키오의 전투 뗏목)"
   ]
 ];
-
-// ── Sea monsters ──────────────────────────────────────────────
-// [lat, lng, "Name EN", "Name KR", "IconKey", {}]
-export const SEA_MONSTERS      = [
+export const SEA_MONSTERS = [
   [
     30.71,
     3.77,
@@ -3993,7 +3973,6 @@ export const SEA_MONSTERS      = [
     {}
   ]
 ];
-
 export const COX_PIRATES_GHOST = [
   [
     -37.16,
@@ -4112,7 +4091,7 @@ export const COX_PIRATES_GHOST = [
     32.15
   ]
 ];
-export const CARGO_SHIPS       = [
+export const CARGO_SHIPS = [
   [
     -35.36,
     -22
@@ -4154,7 +4133,7 @@ export const CARGO_SHIPS       = [
     29.22
   ]
 ];
-export const DRUNK_SNIPERS     = [
+export const DRUNK_SNIPERS = [
   [
     -35.94,
     -19.71
@@ -4236,7 +4215,7 @@ export const DRUNK_SNIPERS     = [
     34.07
   ]
 ];
-export const PIRATE_FLAGS      = [
+export const PIRATE_FLAGS = [
   [
     -36.11,
     -23.79
@@ -4394,11 +4373,7 @@ export const PIRATE_FLAGS      = [
     20.08
   ]
 ];
-
-// ── Seagull fishing spots ─────────────────────────────────────
-// Each array is [lat, lng] positions for that fish species' seagull spots
-
-export const SPOTS_COELACANTH     = [
+export const SPOTS_COELACANTH = [
   [
     -30.51,
     5.41
@@ -4568,7 +4543,7 @@ export const SPOTS_COELACANTH     = [
     122.1
   ]
 ];
-export const SPOTS_GRUNT          = [
+export const SPOTS_GRUNT = [
   [
     -24.28,
     2.71
@@ -4674,7 +4649,7 @@ export const SPOTS_GRUNT          = [
     18.98
   ]
 ];
-export const SPOTS_TUNA           = [
+export const SPOTS_TUNA = [
   [
     -23.19,
     18.07
@@ -4760,7 +4735,7 @@ export const SPOTS_TUNA           = [
     24.84
   ]
 ];
-export const SPOTS_GIANT_OCTOPUS  = [
+export const SPOTS_GIANT_OCTOPUS = [
   [
     -15.37,
     44.49
@@ -4814,7 +4789,7 @@ export const SPOTS_GIANT_OCTOPUS  = [
     122.86
   ]
 ];
-export const SPOTS_SPOTTED_SBASS  = [
+export const SPOTS_SPOTTED_SBASS = [
   [
     -26.2,
     10.64
@@ -4912,7 +4887,7 @@ export const SPOTS_SPOTTED_SBASS  = [
     -0.02
   ]
 ];
-export const SPOTS_TILEFISH       = [
+export const SPOTS_TILEFISH = [
   [
     -16.53,
     49.47
@@ -4950,7 +4925,7 @@ export const SPOTS_TILEFISH       = [
     126.78
   ]
 ];
-export const SPOTS_BLUE_GROUPER   = [
+export const SPOTS_BLUE_GROUPER = [
   [
     -26.6,
     43.67
@@ -4992,7 +4967,7 @@ export const SPOTS_BLUE_GROUPER   = [
     123.1
   ]
 ];
-export const SPOTS_PORGY          = [
+export const SPOTS_PORGY = [
   [
     -17.36,
     -23.38
@@ -5058,7 +5033,7 @@ export const SPOTS_PORGY          = [
     -28.09
   ]
 ];
-export const SPOTS_BLACK_PORGY    = [
+export const SPOTS_BLACK_PORGY = [
   [
     -26.92,
     21.84
@@ -5254,7 +5229,7 @@ export const SPOTS_SMOKEY_CHROMIS = [
     -27.88
   ]
 ];
-export const SPOTS_SEA_BASS       = [
+export const SPOTS_SEA_BASS = [
   [
     -22.42,
     -21.11
@@ -5348,7 +5323,7 @@ export const SPOTS_SEA_BASS       = [
     -21
   ]
 ];
-export const SPOTS_NIBBLER        = [
+export const SPOTS_NIBBLER = [
   [
     -21.9,
     43.08

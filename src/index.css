@@ -2,16 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Leaflet core ─────────────────────────────────────────── */
-@import 'leaflet/dist/leaflet.css';
-
-/* ─── Map background ─────────────────────────────────────────── */
-.leaflet-container {
-  background: #1a2535;
+/* Ensure the app fills the viewport */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
-/* ─── Map marker tooltips ─────────────────────────────────────── */
-.leaflet-tooltip.map-label {
+/* ── Leaflet overrides ──────────────────────────────────────── */
+
+/* Map background colour matches the ocean areas */
+.leaflet-container {
+  background: #1a2535;
+  font-family: inherit;
+}
+
+/* Floating control buttons (zoom in/out) */
+.leaflet-control-zoom a {
+  background: #1f2937 !important;
+  color: #d1d5db !important;
+  border-color: #374151 !important;
+}
+.leaflet-control-zoom a:hover {
+  background: #374151 !important;
+  color: #f3f4f6 !important;
+}
+
+/* ── Zone hover / click tooltip labels ──────────────────────── */
+.map-zone-label {
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  border-radius: 4px;
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.map-zone-label::before { display: none; }
+
+/* ── Permanent marker text labels ───────────────────────────── */
+.map-label {
   background: transparent;
   border: none;
   box-shadow: none;
@@ -20,33 +53,19 @@
   font-weight: 700;
   white-space: nowrap;
   pointer-events: none;
-  /* Hard black outline for readability over any tile colour */
   text-shadow:
     -1px -1px 0 #000,
      1px -1px 0 #000,
     -1px  1px 0 #000,
      1px  1px 0 #000;
 }
+.map-label.city  { font-size: 13px; }
+.map-label::before { display: none; }
 
-/* Hide the default tooltip arrow */
-.leaflet-tooltip.map-label::before {
-  display: none;
-}
-
-/* ─── City / Town labels (larger) ────────────────────────────── */
-.leaflet-tooltip.city-label {
-  font-size: 13px;
-}
-
-/* ─── Custom scrollbar for sidebar panels ────────────────────── */
+/* ── Thin custom scrollbar for the sidebar ──────────────────── */
 .sidebar-scroll {
   scrollbar-width: thin;
   scrollbar-color: #4b5563 transparent;
 }
-.sidebar-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-.sidebar-scroll::-webkit-scrollbar-thumb {
-  background: #4b5563;
-  border-radius: 2px;
-}
+.sidebar-scroll::-webkit-scrollbar       { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 2px; }

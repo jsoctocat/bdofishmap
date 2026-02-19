@@ -1,25 +1,19 @@
 /**
- * Overlay panel that appears when a fishing zone polygon is clicked.
+ * FishDisplayPanel
  *
- * Shows:
- *  • Zone name (EN or KR)
- *  • Fishing rod icon (always shown first)
- *  • Harpoon icon (if harpoon fishing is available)
- *  • Fish sprites from the sprite sheet, bordered in the fish's grade colour,
- *    clickable to jump to that fish in the Fish List tab
- *
- * Props:
- *   zone       — GeoJSON feature (with .properties.name_EN / name_KR / fishGroup)
- *   fishData   — fish array from useFishData
- *   spriteSort — sorted file-key array (for sprite-sheet Y offset)
- *   lang       — 'EN' | 'KR'
- *   onFishClick — (fishName: string) => void  opens Fish List and searches
- *   onClose    — () => void
+ * Shows the catchable fish for the zone that was last hovered or clicked.
+ * Mirrors the original fishdisplayInfo.update() behaviour:
+ *   • Always shows the fishing rod icon first
+ *   • Shows harpoon icon if 'harpoon' appears in fishGroup
+ *   • Shows each fish as a sprite-sheet slice, bordered in grade colour
+ *   • Clicking a fish sprite triggers onFishClick → jumps to Fish List
  */
 
 const ICON_BASE = 'https://bdofish.github.io/icons/';
 
-export default function FishDisplayPanel({ zone, fishData, spriteSort, lang, onFishClick, onClose }) {
+export default function FishDisplayPanel({
+  zone, fishData, spriteSort, lang, onFishClick, onClose,
+}) {
   if (!zone) return null;
 
   const { name_EN, name_KR, fishGroup } = zone.properties;
@@ -28,44 +22,48 @@ export default function FishDisplayPanel({ zone, fishData, spriteSort, lang, onF
   return (
     <div className="absolute top-4 right-4 z-[1000] pointer-events-auto">
       <div className="relative bg-gray-900/92 backdrop-blur border border-amber-500/40
-                      rounded-xl shadow-2xl p-3 max-w-xs">
+                      rounded-xl shadow-2xl p-3 max-w-xs min-w-[180px]">
+
         {/* Close button */}
         <button
           onClick={onClose}
           className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center
                      bg-gray-700 hover:bg-red-600 rounded-full text-white text-[10px]
-                     transition-colors shadow"
+                     transition-colors shadow-md"
           aria-label="Close"
         >
           ✕
         </button>
 
         {/* Zone name */}
-        <div className="text-amber-400 font-bold text-sm mb-2 pb-1.5 border-b border-amber-500/30">
-          {zoneName}
-        </div>
+        <p
+          className="text-amber-400 font-bold text-sm mb-2 pb-1.5 border-b border-amber-500/30"
+          dangerouslySetInnerHTML={{ __html: zoneName }}
+        />
 
-        {/* Fish group icons */}
-        <div className="flex flex-wrap gap-1 items-center">
-          {/* Fishing rod is always shown */}
+        {/* Fish icons */}
+        <div className="flex flex-wrap gap-1.5 items-center">
+
+          {/* Fishing rod — always first */}
           <img
             src={`${ICON_BASE}fishingrod.png`}
-            alt={lang === 'KR' ? '낚싯대' : 'Fishing Rod'}
+            alt="Fishing Rod"
             title={lang === 'KR' ? '낚싯대' : 'Fishing Rod'}
-            className="w-5 h-5"
+            className="w-5 h-5 flex-shrink-0"
             onError={e => { e.target.style.display = 'none'; }}
           />
 
           {fishGroup.map((fileKey, i) => {
-            // Harpoon is a special non-fish entry
+
+            /* Harpoon — special non-fish entry */
             if (fileKey === 'harpoon') {
               return (
                 <img
                   key={i}
                   src={`${ICON_BASE}harpoon.png`}
-                  alt={lang === 'KR' ? '작살' : 'Harpoon'}
+                  alt="Harpoon"
                   title={lang === 'KR' ? '작살' : 'Harpoon'}
-                  className="w-5 h-5"
+                  className="w-5 h-5 flex-shrink-0"
                   onError={e => { e.target.style.display = 'none'; }}
                 />
               );
@@ -77,7 +75,7 @@ export default function FishDisplayPanel({ zone, fishData, spriteSort, lang, onF
             const fishName   = lang === 'KR' ? fish.name_KR : fish.name_EN;
             const gradeColor = fish.grade === '#E5E5E5' ? 'black' : fish.grade;
 
-            // Each fish occupies 25 px vertically in the shared sprite sheet
+            // Sprite-sheet Y offset: each fish occupies 25 px
             const spriteIndex = spriteSort.indexOf(fileKey);
             const spriteY     = spriteIndex !== -1 ? -25 * spriteIndex : 0;
 
@@ -86,7 +84,8 @@ export default function FishDisplayPanel({ zone, fishData, spriteSort, lang, onF
                 key={i}
                 title={fishName}
                 onClick={() => onFishClick(fishName)}
-                className="inline-block hover:scale-110 transition-transform"
+                className="inline-block hover:scale-110 transition-transform cursor-pointer
+                           focus:outline-none focus:ring-1 focus:ring-amber-400"
                 style={{ border: `1px solid ${gradeColor}`, borderRadius: 2 }}
               >
                 <span
@@ -100,6 +99,12 @@ export default function FishDisplayPanel({ zone, fishData, spriteSort, lang, onF
               </button>
             );
           })}
+
+          {fishGroup.length === 0 && (
+            <span className="text-xs text-gray-400 italic">
+              {lang === 'KR' ? '물고기 없음' : 'no fish'}
+            </span>
+          )}
         </div>
       </div>
     </div>

@@ -1,8 +1,7 @@
 # BDO Fishing Map
 
-React + Tailwind CSS rewrite of [bdofish.github.io](https://bdofish.github.io).
-
-All hardcoded coordinates, tile URLs, and icon paths are preserved exactly from the original.
+React + Tailwind rewrite of [bdofish.github.io](https://bdofish.github.io).  
+All hardcoded coordinates are preserved exactly from the original.
 
 ---
 
@@ -17,59 +16,68 @@ Open http://localhost:5173
 
 ---
 
-## Project structure
+## Architecture
+
+The map layer uses **plain Leaflet** (not react-leaflet) initialised via `useEffect`.  
+This mirrors the original implementation 1-to-1 and gives full control over:
+- `resetStyle()` on GeoJSON layers (required for choropleth click/hover)
+- Zoom-aware marker icon swapping
+- `invalidateSize()` when the sidebar opens/closes
+
+React manages the UI shell (sidebar, fish list, layer panel) and communicates
+with the map via a `onZoneSelect` callback and `layers` / `lang` props.
 
 ```
 src/
-├── main.jsx                   ← React entry point
-├── App.jsx                    ← Root component; owns all shared state
-├── index.css                  ← Tailwind + Leaflet CSS imports + global overrides
+├── main.jsx                       Entry point
+├── App.jsx                        Root — owns all shared state
+├── index.css                      Tailwind + Leaflet CSS + global overrides
 │
 ├── data/
-│   ├── markers.js             ← All hardcoded [lat, lng] marker arrays (do not edit coords)
-│   └── fishingZones.js        ← Freshwater / Saltwater GeoJSON + UnknownArea polygons
+│   ├── markers.js                 All hardcoded [lat, lng] marker arrays
+│   └── fishingZones.js            Freshwater / Saltwater GeoJSON + fog-of-war polygons
 │
 ├── constants/
-│   ├── icons.js               ← Leaflet icon instances (all L.icon() definitions)
-│   └── layers.js              ← Layer group config + buildDefaultLayers() helper
+│   └── layers.js                  Layer group config + buildDefaultLayers()
 │
 ├── hooks/
-│   └── useFishData.js         ← Fetches fish catalogue JSON from bdofish's GitHub
+│   └── useFishData.js             Fetches live fish catalogue from GitHub
 │
 └── components/
     ├── Map/
-    │   ├── BDOMap.jsx          ← MapContainer wrapper; composes all map layers
-    │   ├── UnknownAreas.jsx    ← Three fog-of-war overlay polygons
-    │   ├── FishingZones.jsx    ← Freshwater + Saltwater GeoJSON layers
-    │   ├── MarkerLayers.jsx    ← All point markers (nodes, monsters, NPCs, seagulls…)
-    │   └── FishDisplayPanel.jsx← Zone-click overlay showing catchable fish
+    │   ├── useLeafletMap.js       Plain Leaflet engine (tiles, GeoJSON, markers)
+    │   ├── BDOMap.jsx             Thin wrapper: mounts map div + FishDisplayPanel
+    │   └── FishDisplayPanel.jsx   Zone-click overlay showing catchable fish
     │
     └── Sidebar/
-        ├── Sidebar.jsx         ← Icon rail + sliding content panel
-        ├── LayerPanel.jsx      ← Layer visibility checkboxes
-        ├── FishList.jsx        ← Searchable fish catalogue table
+        ├── Sidebar.jsx            Rail + collapsible content panel
+        ├── LayerPanel.jsx         Layer visibility checkboxes
+        ├── FishList.jsx           Searchable fish catalogue table
         └── UI/
-            └── LayerToggle.jsx ← Reusable coloured checkbox component
+            └── LayerToggle.jsx    Coloured checkbox component
 ```
+
+---
+
+## Choropleth interaction
+
+Exactly mirroring the original:
+
+| Action | Result |
+|---|---|
+| Hover zone | Highlight green, show fish panel |
+| Move away | Unhighlight, hide panel |
+| Click zone | Lock highlight + panel (stays on mouseout) |
+| Click same zone again | Deselect |
+| Click map background | Deselect |
+| Click fish sprite | Jump to Fish List tab, pre-filled search |
 
 ---
 
 ## Data sources
 
-| Asset | Source |
+| Asset | URL |
 |---|---|
 | Map tiles | `https://bdofish.github.io/map/{z}/{x}/{y}.jpg` |
 | Icons | `https://bdofish.github.io/icons/` |
-| Fish catalogue | `https://raw.githubusercontent.com/bdofish/bdofish.github.io/master/scripts/fish-data.json` |
-| Marker coordinates | Extracted from the original `bdofish_Script-min.js` and stored in `src/data/markers.js` |
-| Fishing zone polygons | Extracted from the original script and stored in `src/data/fishingZones.js` |
-
----
-
-## Features
-
-- **Layer toggles** — Cities, Nodes (T1–T4), Islands, Freshwater/Saltwater zones, Sea Monsters, Seagull spots, NPCs, and more
-- **Fishing zone click** — click any coloured polygon to see all catchable fish with sprite icons; click a fish to search the list
-- **Fish List tab** — searchable, filterable table of every fish with grade colours
-- **Zoom-aware markers** — node and sea monster icons shrink at zoom ≤ 4 (matching original behaviour)
-- **EN / KR language** — all labels switchable between English and Korean
+| Fish catalogue | GitHub raw JSON from bdofish repo |

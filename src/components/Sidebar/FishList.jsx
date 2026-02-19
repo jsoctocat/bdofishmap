@@ -1,43 +1,31 @@
 /**
- * The "Fish List" tab content of the sidebar.
- *
- * Features:
- *  • Text search across name_EN / name_KR
- *  • Filter buttons by fish type (Freshwater / Saltwater / etc.)
- *  • Sortable table: Type | Method | Icon | Name (alphabetical)
- *  • Fish icon colours match in-game grade colours
+ * "Fish List" tab — searchable, filterable table of every fish.
  *
  * Props:
- *   fishData      — array of fish objects from useFishData
- *   lang          — 'EN' | 'KR'
- *   searchTerm    — controlled search string
- *   onSearchChange — (value: string) => void
- *   activeFilters — string[] of active type filters
- *   onFilterChange — (type: string) => void  (toggles a filter)
+ *   fishData       — array of fish objects
+ *   lang           — 'EN' | 'KR'
+ *   searchTerm     — controlled string
+ *   onSearchChange — (value) => void
+ *   activeFilters  — string[] of active type filters
+ *   onFilterChange — (type) => void  (toggles a filter)
  */
 
 const ICON_BASE = 'https://bdofish.github.io/icons/';
 
 export default function FishList({
-  fishData,
-  lang,
-  searchTerm,
-  onSearchChange,
-  activeFilters,
-  onFilterChange,
+  fishData, lang,
+  searchTerm, onSearchChange,
+  activeFilters, onFilterChange,
 }) {
-  // Collect unique fish types from loaded data
   const types = [...new Set(fishData.map(f => f.type).filter(Boolean))].sort();
 
-  // Apply search + type filters
   const filtered = fishData.filter(fish => {
-    const name = lang === 'KR' ? fish.name_KR : fish.name_EN;
-    const matchSearch  = !searchTerm || name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchFilter  = activeFilters.length === 0 || activeFilters.includes(fish.type);
+    const name        = lang === 'KR' ? fish.name_KR : fish.name_EN;
+    const matchSearch = !searchTerm || name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchFilter = activeFilters.length === 0 || activeFilters.includes(fish.type);
     return matchSearch && matchFilter;
   });
 
-  // Alphabetical sort by display name
   const sorted = [...filtered].sort((a, b) => {
     const na = lang === 'KR' ? a.name_KR : a.name_EN;
     const nb = lang === 'KR' ? b.name_KR : b.name_EN;
@@ -46,7 +34,8 @@ export default function FishList({
 
   return (
     <div className="flex flex-col h-full">
-      {/* ── Search & Filter bar ─────────────────────────────── */}
+
+      {/* Search bar + filter pills */}
       <div className="p-2 border-b border-gray-700 flex-shrink-0 space-y-2">
         <input
           type="text"
@@ -58,7 +47,6 @@ export default function FishList({
                      focus:outline-none focus:border-amber-500 transition-colors"
         />
 
-        {/* Type filter pills */}
         <div className="flex flex-wrap gap-1">
           {types.map(type => (
             <button
@@ -76,36 +64,32 @@ export default function FishList({
         </div>
       </div>
 
-      {/* ── Fish table ─────────────────────────────────────── */}
+      {/* Table */}
       <div className="sidebar-scroll flex-1 overflow-y-auto min-h-0">
         <table className="w-full text-xs">
           <thead className="sticky top-0 bg-amber-600 text-black z-10">
             <tr>
               <th className="px-1 py-1 text-left w-16 font-semibold">
-                {lang === 'KR' ? '종류' : 'Type'}
+                {lang === 'KR' ? '종류'  : 'Type'}
               </th>
               <th className="px-1 py-1 text-left w-14 font-semibold">
-                {lang === 'KR' ? '방식' : 'Method'}
+                {lang === 'KR' ? '방식'  : 'Method'}
               </th>
               <th className="px-1 py-1 text-center w-8 font-semibold">
-                {lang === 'KR' ? '아이콘' : 'Icon'}
+                {lang === 'KR' ? '아이콘': 'Icon'}
               </th>
               <th className="px-1 py-1 text-left font-semibold">
-                {lang === 'KR' ? '이름' : 'Name'}
+                {lang === 'KR' ? '이름'  : 'Name'}
               </th>
             </tr>
           </thead>
-
           <tbody>
             {sorted.map((fish, i) => {
               const name       = lang === 'KR' ? fish.name_KR : fish.name_EN;
-              const gradeColor = fish.grade === '#E5E5E5' ? '#888888' : fish.grade;
-
+              const gradeColor = fish.grade === '#E5E5E5' ? '#888' : fish.grade;
               return (
-                <tr
-                  key={i}
-                  className="border-b border-gray-800/60 hover:bg-gray-800/50 transition-colors"
-                >
+                <tr key={i}
+                    className="border-b border-gray-800/60 hover:bg-gray-800/50 transition-colors">
                   <td className="px-1 py-0.5 text-gray-400">{fish.type}</td>
                   <td className="px-1 py-0.5 text-gray-400">{fish.method}</td>
                   <td className="px-1 py-0.5 text-center">
