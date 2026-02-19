@@ -58,7 +58,7 @@ export default function App() {
   const sidebarWidth = RAIL_WIDTH + (sidebarOpen ? PANEL_WIDTH : 0);
 
   return (
-    <div className="relative w-full h-full bg-gray-950">
+    <div className="relative w-full h-full" style={{ background: 'rgb(29, 55, 55)' }}>
 
       <Sidebar
         isOpen={sidebarOpen}

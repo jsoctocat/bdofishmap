@@ -183,6 +183,7 @@ export function useLeafletMap({ layers, lang, onZoneSelect }) {
       maxZoom:          8,
       attributionControl: false,
       zoomControl:      true,
+      fadeAnimation:    false,  // prevents white flash when new tiles load in
     });
 
     // Tile layer — identical config to original

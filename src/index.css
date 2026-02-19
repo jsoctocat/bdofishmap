@@ -12,10 +12,19 @@ html, body, #root {
 
 /* ── Leaflet overrides ──────────────────────────────────────── */
 
-/* Map background colour matches the ocean areas */
+/* Map background colour — sampled from the BDO world-map ocean tiles */
 .leaflet-container {
-  background: #1a2535;
+  background: rgb(29, 55, 55);
   font-family: inherit;
+}
+
+/* Prevent white flash on tile load / zoom */
+.leaflet-tile {
+  background: transparent !important;
+}
+.leaflet-tile-container img,
+.leaflet-tile img {
+  background: transparent !important;
 }
 
 /* Floating control buttons (zoom in/out) */
