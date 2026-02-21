@@ -7,7 +7,7 @@ import {
   IconNode2, IconNode2Small,
   IconNode3, IconNode3Small,
   IconNode4, IconNode4Small,
-  IconHarbor, IconImperial, IconBarterer, IconTrade,
+  IconHarbor, IconImperial, IconBarterer, IconBartererOcean, IconTrade,
   IconCoelacanth, IconGrunt, IconTuna, IconGiantOctopus,
   IconSpottedSeaBass, IconTilefish, IconBlueGrouper,
   IconPorgy, IconBlackPorgy, IconSmokeyChromis,
@@ -244,7 +244,7 @@ export default function MarkerLayers({ layers, lang }) {
       {/* Ocean Barterers have a label (name at index 2/3) */}
       <LabelledPinLayer
         data={BARTERERS_OCEAN}
-        icon={IconBarterer}
+        icon={IconBartererOcean}
         lang={lang}
         visible={layers.bartererOcean}
       />

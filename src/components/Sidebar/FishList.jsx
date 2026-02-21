@@ -11,7 +11,7 @@ import { useState, useMemo } from 'react';
  */
 
 // Use bdofish.com as the authoritative icon host
-const ICON_BASE = 'https://bdofish.com/icons/';
+const ICON_BASE = '/data/icons/';
 
 const TYPE_FILTERS = [
   { token: 'fw',  labelEN: 'Freshwater', labelKR: '민물'  },

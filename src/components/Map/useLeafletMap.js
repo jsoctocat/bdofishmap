@@ -35,7 +35,7 @@ import {
 } from '../../data/markers.js';
 
 // ── Icon factory ─────────────────────────────────────────────────────────────
-const ICON_BASE = 'https://bdofish.github.io/icons/';
+const ICON_BASE = '/data/icons/';
 
 function icon(file, size, anchor, tipAnchor) {
   const [w, h] = size;
@@ -49,16 +49,17 @@ function icon(file, size, anchor, tipAnchor) {
 
 // Full-size icons (zoom ≥ 5)
 const ICONS = {
-  City:    icon('City.png',   [42, 42], [21, 21], [21, 30]),
-  Town:    icon('Town.png',   [36, 36], [18, 18], [18, 26]),
-  Node1:   icon('Node1.png',  [34, 30], [17, 15], [17, 21]),
-  Node2:   icon('Node2.png',  [38, 38], [19, 19], [19, 25]),
-  Node3:   icon('Node3.png',  [34, 34], [17, 17], [17, 23]),
-  Node4:   icon('Node4.png',  [34, 34], [17, 17], [17, 23]),
-  Harbor:  icon('Harbor.png', [20, 20]),
-  Imperial:icon('Imperial.png',[26, 26]),
-  Barterer:icon('Barterer.png',[22, 22]),
-  Trade:   icon('TradeManager.png',[22, 22]),
+  City:    icon('City.png',                   [42, 42], [21, 21], [21, 30]),
+  Town:    icon('Town.png',                   [36, 36], [18, 18], [18, 26]),
+  Node1:   icon('Node1.png',                  [34, 30], [17, 15], [17, 21]),
+  Node2:   icon('Node2.png',                  [38, 38], [19, 19], [19, 25]),
+  Node3:   icon('Node3.png',                  [34, 34], [17, 17], [17, 23]),
+  Node4:   icon('Node4.png',                  [34, 34], [17, 17], [17, 23]),
+  Harbor:  icon('Harbor.png',                 [20, 20]),
+  Imperial:icon('ImperialFishingDelivery.png',[26, 26]),
+  Barterer:icon('Barterer.png',               [22, 22]),
+  BartererOcean:icon('BartererOcean.png',     [22, 22]),
+  Trade:   icon('TradeManager.png',           [22, 22]),
 
   Vell:               icon('Vell.png',               [50,50],[25,25],[25,30]),
   YoungSeaMonster:    icon('YoungSeaMonster.png',    [50,50],[25,25],[25,28]),
@@ -189,7 +190,7 @@ export function useLeafletMap({ layers, lang, onZoneSelect }) {
     // Tile layer
     // updateWhenZooming:false means tiles only load once the zoom gesture settles,
     // so the map stays at the previous zoom's (lower-res) tiles during the gesture.
-    L.tileLayer('https://bdofish.github.io/map/{z}/{x}/{y}.jpg', {
+    L.tileLayer('/data/map/{z}/{x}/{y}.jpg', {
       minZoom:           2,
       maxNativeZoom:     7,
       maxZoom:           8,
@@ -460,7 +461,7 @@ function buildAllMarkerLayers(map, markerLayersRef, lang) {
   // ── Ocean Barterers (labelled)
   ml.bartererOcean = L.layerGroup().addTo(map);
   BARTERERS_OCEAN.forEach(m => {
-    L.marker([m[0], m[1]], { icon: ICONS.Barterer })
+    L.marker([m[0], m[1]], { icon: ICONS.BartererOcean })
       .bindTooltip(m[lang === 'KR' ? 3 : 2], tp('map-label', 'top', false))
       .addTo(ml.bartererOcean);
   });

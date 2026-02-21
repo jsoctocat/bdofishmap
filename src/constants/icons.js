@@ -1,7 +1,7 @@
 import L from 'leaflet';
 
 // All icons are served from the live bdofish GitHub Pages site.
-const BASE = 'https://bdofish.com/icons/';
+const BASE = '/data/icons/';
 
 /**
  * Create a Leaflet DivIcon-free icon from a relative path under BASE.
@@ -37,10 +37,11 @@ export const IconNode4Small = makeIcon('Node4.png', [17, 17], [8, 8],  [8, 12]);
 
 // ── NPC icons ─────────────────────────────────────────────────
 
-export const IconHarbor    = makeIcon('Harbor.png',       [20, 20], [10, 10]);
-export const IconImperial  = makeIcon('Imperial.png',     [26, 26], [13, 13]);
-export const IconBarterer  = makeIcon('Barterer.png',     [22, 22], [11, 11]);
-export const IconTrade     = makeIcon('TradeManager.png', [22, 22], [11, 11]);
+export const IconHarbor         = makeIcon('Harbor.png',                      [20, 20], [10, 10]);
+export const IconImperial       = makeIcon('ImperialFishingDelivery.png',     [26, 26], [13, 13]);
+export const IconBarterer       = makeIcon('Barterer.png',                    [22, 22], [11, 11]);
+export const IconBartererOcean  = makeIcon('BartererOcean.png',               [22, 22], [11, 11]);
+export const IconTrade          = makeIcon('TradeManager.png',                [22, 22], [11, 11]);
 
 // ── Sea monster icons (full size, shown at zoom ≥ 5) ─────────
 

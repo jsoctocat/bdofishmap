@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const FISH_JSON_URL =
-  'https://raw.githubusercontent.com/bdofish/bdofish.github.io/master/scripts/fish-data.json';
+  '/data/scripts/fish-data.json';
 
 /**
  * Fetches the live fish catalogue from bdofish's GitHub repository.
