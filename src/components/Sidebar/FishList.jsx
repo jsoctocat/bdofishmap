@@ -28,7 +28,7 @@ const GRADE_FILTERS = [
   { token: 'yw', color: '#EDC845', labelEN: 'Yellow', labelKR: '노랑'   },
   { token: 'bl', color: '#56B3E0', labelEN: 'Blue',   labelKR: '파랑'   },
   { token: 'gr', color: '#A2BF40', labelEN: 'Green',  labelKR: '초록'   },
-  { token: 'wh', color: '#a2a2a2', labelEN: 'White',  labelKR: '흰색'   },
+  { token: 'wh', color: '#E5E5E5', labelEN: 'White',  labelKR: '흰색'   },
 ];
 
 const TYPE_ABBR = { fw: 'Fresh', sw: 'Salt', etc: 'Other' };
